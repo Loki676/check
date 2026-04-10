@@ -8,20 +8,28 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Inject Apps Script URL
+        env:
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
         run: |
-          sed -i "s|YOUR_SCRIPT_URL_HERE|${{ secrets.APPS_SCRIPT_URL }}|g" index.html
-
-      - name: Verify replacement worked
-        run: grep -o "script.google.com" index.html && echo "✅ URL injected" || echo "❌ Replacement failed"
+          if [ -z "$APPS_SCRIPT_URL" ]; then
+            echo "❌ Secret APPS_SCRIPT_URL is empty or missing!"
+            exit 1
+          fi
+          sed -i "s|YOUR_SCRIPT_URL_HERE|$APPS_SCRIPT_URL|g" index.html
+          echo "✅ Done. Checking result:"
+          grep "script.google.com" index.html || echo "❌ URL not found in file after replacement"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
