@@ -5,11 +5,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout code
@@ -18,6 +19,9 @@ jobs:
       - name: Inject Apps Script URL
         run: |
           sed -i "s|YOUR_SCRIPT_URL_HERE|${{ secrets.APPS_SCRIPT_URL }}|g" index.html
+
+      - name: Verify replacement worked
+        run: grep -o "script.google.com" index.html && echo "✅ URL injected" || echo "❌ Replacement failed"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
